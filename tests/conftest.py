@@ -47,7 +47,7 @@ def app(base_app: Flask) -> Flask:
     a = base_app
     a.config['IPERNITY_CALLBACK'] = True
     login = LoginManager(a)
-    Ipernity(a, login)
+    Ipernity(a, True, login)
     
     return a
 

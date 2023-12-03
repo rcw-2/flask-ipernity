@@ -22,9 +22,20 @@ log = getLogger(__name__)
 
 class Ipernity():
     """
+    
+    Args:
+        app:            The Flask application
+        add_callback:   Add Ipernity callback
+        login:          If given, use Ipernity as backend for Flask-Login
     """
     
-    def __init__(self, app: Flask|None = None, login: LoginManager|None = None):
+    def __init__(
+        self,
+        app: Flask|None = None,
+        add_callback: bool = False,
+        login: LoginManager|None = None
+    ):
+        self.add_callback = add_callback
         self.login = login
         # Initialize app
         if app is not None:
@@ -38,14 +49,12 @@ class Ipernity():
         # Default configuration
         app.config.setdefault('IPERNITY_CACHE_REQUESTS', False)
         app.config.setdefault('IPERNITY_CACHE_MAX_AGE', 300)
-        app.config.setdefault('IPERNITY_CALLBACK', False)
         app.config.setdefault('IPERNITY_CALLBACK_URL_PREFIX', '/flask_ipernity_callback')
-        app.config.setdefault('IPERNITY_LOGIN', False)
         app.config.setdefault('IPERNITY_LOGIN_URL_PREFIX', '/flask_ipernity_login')
         app.config.setdefault('IPERNITY_PERMISSIONS', {})
         app.config.setdefault('IPERNITY_LOGIN_RULE', '/login')
         
-        if app.config['IPERNITY_CALLBACK']:
+        if self.add_callback:
             log.debug('Preparing callback blueprint')
             from .callback import callback
             app.register_blueprint(

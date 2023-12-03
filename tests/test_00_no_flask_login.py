@@ -16,8 +16,7 @@ log = getLogger(__name__)
 
 def test_no_flask_login(base_app, browser, test_config):
     app = base_app
-    app.config['IPERNITY_CALLBACK'] = True
-    Ipernity(app)
+    Ipernity(app, True)
     
     @app.route('/login')
     def login():
