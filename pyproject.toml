@@ -1,0 +1,49 @@
+[project]
+name = "Flask-Ipernity"
+description = "Flask extension for Ipernity"
+readme = "README.rst"
+authors = [
+    { name = "rcw-2", email = "mail@rcw-2.de" }
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Web Environment",
+    "Framework :: Flask",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+keywords = ["ipernity", "photo", "web"]
+dependencies = [
+    "Flask",
+    "PyIpernity",
+]
+requires-python = ">=3.10"
+dynamic = ["version"]
+
+[project.urls]
+homepage = "https://github.com/rcw-2/flask-ipernity"
+
+[project.optional-dependencies]
+login = ["Flask-Login"]
+docs = ["sphinx", "tomli; python_version < '3.11'"]
+test = ["PyYAML", "flake8", "pytest", "pytest-cov"]
+
+[build-system]
+requires = ["setuptools", "setuptools_scm>=6.4"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "src/flask_ipernity/_version.py"
+version_scheme = "guess-next-dev"
+local_scheme = "dirty-tag"
+
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report html --cov-report xml --cov-append"
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
