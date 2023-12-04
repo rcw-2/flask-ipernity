@@ -11,9 +11,9 @@ with `Flask-Login`_ provide user login via Ipernity.
 Installation
 -------------
 
-The source code is available at `<http://github.com/rcw-2/python-ipernity>`_.
+The source code is available at `<http://github.com/rcw-2/flask-ipernity>`_.
 
-.. _Flask:: https://flask.palletsprojects.com/
-.. _Ipernity:: http://www.ipernity.com/
-.. _PyIpernity:: https://pyipernity.readthedocs.io/
+.. _Flask: https://flask.palletsprojects.com/
+.. _Ipernity: http://www.ipernity.com/
+.. _PyIpernity: https://pyipernity.readthedocs.io/
 
