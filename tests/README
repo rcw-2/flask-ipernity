@@ -24,3 +24,8 @@ procedure:
             cookie_consent: ok
             s: "<your s cookie>"
             ua: "<your ua cookie>"
+
+4. After that, you should be able to run the tests with
+
+    pytest
+
