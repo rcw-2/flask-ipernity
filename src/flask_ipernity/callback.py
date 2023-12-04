@@ -15,7 +15,7 @@ log = getLogger(__name__)
 callback = Blueprint('flask_ipernity_callback', __name__)
 
 
-@callback.route('/')
+@callback.route('/cb')
 def ipernity_callback() -> Response:
     log.debug('Ipernity callback called')
     ipernity.set_token()

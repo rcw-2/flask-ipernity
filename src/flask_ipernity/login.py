@@ -64,6 +64,7 @@ def load_user(id_: str) -> User:
     """
     Loads a user from the session.
     """
+    log.debug('Loading user %s', id_)
     if not ipernity.api.token:
         return None
     if not ipernity.api.user_info:

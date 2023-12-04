@@ -43,11 +43,21 @@ def base_app(test_config: Mapping) -> Flask:
 
 @pytest.fixture
 def app(base_app: Flask) -> Flask:
-    from flask_login import LoginManager
+    from flask_login import LoginManager, current_user
     a = base_app
     a.config['IPERNITY_CALLBACK'] = True
     login = LoginManager(a)
     Ipernity(a, True, login)
+    
+    @a.route('/user')
+    def user():
+        log.debug('Returning user info')
+        return jsonify({
+            'id':               current_user.get_id(),
+            'is_active':        current_user.is_active,
+            'is_anonymous':     current_user.is_anonymous,
+            'is_authenticated': current_user.is_authenticated,
+        })
     
     return a
 

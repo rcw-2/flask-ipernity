@@ -49,8 +49,8 @@ class Ipernity():
         # Default configuration
         app.config.setdefault('IPERNITY_CACHE_REQUESTS', False)
         app.config.setdefault('IPERNITY_CACHE_MAX_AGE', 300)
-        app.config.setdefault('IPERNITY_CALLBACK_URL_PREFIX', '/flask_ipernity_callback')
-        app.config.setdefault('IPERNITY_LOGIN_URL_PREFIX', '/flask_ipernity_login')
+        app.config.setdefault('IPERNITY_CALLBACK_URL_PREFIX', '/ipernity')
+        app.config.setdefault('IPERNITY_LOGIN_URL_PREFIX', '/ipernity')
         app.config.setdefault('IPERNITY_PERMISSIONS', {})
         app.config.setdefault('IPERNITY_LOGIN_RULE', '/login')
         
