@@ -10,14 +10,24 @@ from flask import Flask, redirect, current_app, g, request, session
 from ipernity import IpernityAPI
 from werkzeug.local import LocalProxy
 
-from .cache import CachedIpernityAPI
-
 if TYPE_CHECKING:
     from flask import Response
     from flask_login import LoginManager
 
 
 log = getLogger(__name__)
+
+
+default_flask_options = {
+    'IPERNITY_CACHE_MAX_AGE': 300,
+    'IPERNITY_CALLBACK': False,
+    'IPERNITY_CALLBACK_URL_PREFIX': '/ipernity',
+    'IPERNITY_LOGIN': False,
+    'IPERNITY_LOGIN_URL_PREFIX': '/ipernity',
+    'IPERNITY_PERMISSIONS': {},
+    'IPERNITY_CACHE_REQUESTS': False,
+    'IPERNITY_SESSION_PREFIX': 'ipernity_',
+}
 
 
 class Ipernity():
@@ -32,11 +42,7 @@ class Ipernity():
     def __init__(
         self,
         app: Flask|None = None,
-        add_callback: bool = False,
-        login: LoginManager|None = None
     ):
-        self.add_callback = add_callback
-        self.login = login
         # Initialize app
         if app is not None:
             self.init_app(app)
@@ -47,14 +53,10 @@ class Ipernity():
         app.extensions['ipernity'] = self
         
         # Default configuration
-        app.config.setdefault('IPERNITY_CACHE_REQUESTS', False)
-        app.config.setdefault('IPERNITY_CACHE_MAX_AGE', 300)
-        app.config.setdefault('IPERNITY_CALLBACK_URL_PREFIX', '/ipernity')
-        app.config.setdefault('IPERNITY_LOGIN_URL_PREFIX', '/ipernity')
-        app.config.setdefault('IPERNITY_PERMISSIONS', {})
-        app.config.setdefault('IPERNITY_LOGIN_RULE', '/login')
+        for option, value in default_flask_options.items():
+            app.config.setdefault(option, value)
         
-        if self.add_callback:
+        if app.config['IPERNITY_CALLBACK']:
             log.debug('Preparing callback blueprint')
             from .callback import callback
             app.register_blueprint(
@@ -62,20 +64,26 @@ class Ipernity():
                 url_prefix = app.config['IPERNITY_CALLBACK_URL_PREFIX']
             )
         
-        if self.login is not None:
+        if app.config['IPERNITY_LOGIN']:
             log.debug('Preparing login manager blueprint')
             from .login import ip_login, init_app as init_login
             app.register_blueprint(
                 ip_login,
                 url_prefix = app.config['IPERNITY_LOGIN_URL_PREFIX']
             )
-            init_login(app, self)
+            init_login(app)
         
         # 
         app.context_processor(_context_processor)
     
     
-    def authorize(self, permissions: Mapping, next_url: str|None = None) -> Response:
+    def authorize(
+        self,
+        permissions: Mapping|None = None,
+        next_url: str|None = None
+    ) -> Response:
+        if permissions is None:
+            permissions = current_app.config['IPERNITY_PERMISSIONS']
         log.debug('Authorizing for %s', permissions)
         if next_url is None:
             next_url = request.url
@@ -91,8 +99,15 @@ class Ipernity():
         log.debug('Got frob %s', frob)
         
         # Get token and save it to session and API
-        session['ipernity_token'] = self.api.auth.getToken(frob)['auth']
+        self.session_set('token', self.api.auth.getToken(frob)['auth'])
     
+    
+    def logout(self):
+        for key in list(session):
+            if key.startswith(current_app.config['IPERNITY_SESSION_PREFIX']):
+                del session[key]
+        self.api.token = None
+
     
     @property
     def api(self) -> IpernityAPI:
@@ -102,11 +117,12 @@ class Ipernity():
             kwargs = {
                 'api_key':      current_app.config['IPERNITY_APP_KEY'],
                 'api_secret':   current_app.config['IPERNITY_APP_SECRET'],
-                'token':        session.get('ipernity_token'),
+                'token':        self.session_get('token'),
                 'auth':         'web',
             }
 
             if current_app.config['IPERNITY_CACHE_REQUESTS']:
+                from .cache import CachedIpernityAPI
                 g.ipernity_api = CachedIpernityAPI(
                     current_app.config['IPERNITY_CACHE_MAX_AGE'],
                     **kwargs
@@ -115,6 +131,25 @@ class Ipernity():
                 g.ipernity_api = IpernityAPI(**kwargs)
         
         return g.ipernity_api
+    
+    
+    def session_get(self, key: str, default: Any = None) -> Any:
+        """
+        Returns a session variable.
+        """
+        return session.get(current_app.config['IPERNITY_SESSION_PREFIX'] + key, default)
+    
+    
+    def session_set(self, key: str, value: Any):
+        """Sets a session variable."""
+        session[current_app.config['IPERNITY_SESSION_PREFIX'] + key] = value
+    
+    
+    def session_pop(self, key: str, default: Any = None) -> Any:
+        """
+        Removes a session variable and returns it.
+        """
+        return session.pop(current_app.config['IPERNITY_SESSION_PREFIX'] + key, default)
 
 
 def _context_processor() -> Dict:

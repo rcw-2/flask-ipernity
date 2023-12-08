@@ -11,7 +11,7 @@ import pytest
 import requests
 import yaml
 from flask import Flask, jsonify, session
-from flask_ipernity import Ipernity
+from flask_ipernity import Ipernity, ipernity
 
 if TYPE_CHECKING:
     from flask.testing import FlaskClient
@@ -36,7 +36,7 @@ def base_app(test_config: Mapping) -> Flask:
     @a.route('/get_token')
     def get_token():
         log.debug('Returning Ipernity token')
-        return jsonify(session['ipernity_token'])
+        return jsonify(ipernity.session_get('token'))
     
     return a
 
@@ -46,8 +46,9 @@ def app(base_app: Flask) -> Flask:
     from flask_login import LoginManager, current_user
     a = base_app
     a.config['IPERNITY_CALLBACK'] = True
-    login = LoginManager(a)
-    Ipernity(a, True, login)
+    a.config['IPERNITY_LOGIN'] = True
+    LoginManager(a)
+    Ipernity(a)
     
     @a.route('/user')
     def user():

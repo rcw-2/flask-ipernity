@@ -29,8 +29,8 @@ def test_login_logout(browser, client, test_config):
     log.info('Logging out')
     res = client.get('/ipernity/logout')
     log.info('Got result %d: %s', res.status_code, res.headers.get('content-type'))
-    with pytest.raises(KeyError):
-        client.get('/get_token')
+    res = client.get('/get_token')
+    assert res.json is None
 
 
 def test_not_logged_in(client):
@@ -47,7 +47,9 @@ def test_login_required(app, client):
     
     @app.route('/redir')
     def redir():
-        return redirect(url_for('flask_ipernity_login.login'))
+        return redirect(url_for(
+            'ip_login.login'
+        ))
     
     @app.route('/restricted')
     @login_required

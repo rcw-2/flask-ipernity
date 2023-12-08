@@ -161,3 +161,4 @@ cython_debug/
 flask-ipernity.code-workspace
 tests/.test-config.yaml
 src/flask_ipernity/_version.py
+.vscode/

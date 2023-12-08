@@ -10,12 +10,12 @@ from typing import List, Mapping, TYPE_CHECKING
 from flask import (
     Blueprint, Flask, Response,
     redirect,
-    current_app, request, session
+    current_app, request
 )
 from flask_login import (
-    LoginManager, UserMixin,
+    UserMixin,
     login_user, logout_user,
-    current_user, user_logged_out
+    user_logged_out
 )
 from werkzeug.local import LocalProxy
 
@@ -29,13 +29,12 @@ if TYPE_CHECKING:
 log = getLogger(__name__)    
 
 
-ip_login = Blueprint('flask_ipernity_login', __name__)
+ip_login = Blueprint('ip_login', __name__)
 
 
-def init_app(app: Flask, ipernity: Ipernity):
-    login: LoginManager = ipernity.login
-    login.login_view = 'flask_ipernity_login.login'
-    login.user_loader(load_user)
+def init_app(app: Flask):
+    app.login_manager.login_view = 'ip_login.login'
+    app.login_manager.user_loader(load_user)
     user_logged_out.connect(on_logout)
 
 
@@ -69,7 +68,7 @@ def load_user(id_: str) -> User:
         return None
     if not ipernity.api.user_info:
         log.error('No user info for API token, dumping token')
-        ipernity_logout()
+        ipernity.logout()
         return None
     if ipernity.api.user_info['user_id'] != id_:
         log.error(
@@ -77,21 +76,14 @@ def load_user(id_: str) -> User:
             id_,
             ipernity.api.user_info['user_id']
         )
-        ipernity_logout()
+        ipernity.logout()
         return None
     
     return User(ipernity.api)
 
 
 def on_logout(sender: Flask, user: User):
-    ipernity_logout()
-
-
-def ipernity_logout():
-    for var in ['ipernity_token', 'ipernity_cache']:
-        if var in session:
-            del session[var]
-    ipernity.api.token = None
+    ipernity.logout()
 
 
 class User(UserMixin):

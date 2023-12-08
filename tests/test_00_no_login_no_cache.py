@@ -10,11 +10,12 @@ from logging import getLogger
 log = getLogger(__name__)
 
 
-def test_no_flask_login(base_app, browser, test_config):
+def test_no_login_no_cache(base_app, browser, test_config):
     from flask_ipernity import Ipernity, ipernity
     
     app = base_app
-    Ipernity(app, True)
+    app.config['IPERNITY_CALLBACK'] = True
+    Ipernity(app)
     
     @app.route('/login')
     def login():
@@ -37,6 +38,8 @@ def test_no_flask_login(base_app, browser, test_config):
     )
     assert res.json['user']['username'] == test_config['ipernity']['username']
     assert 'flask_login' not in sys.modules
+    assert 'flask_ipernity.login' not in sys.modules
+    assert 'flask_ipernity.cache' not in sys.modules
 
 
 

@@ -7,7 +7,7 @@ from logging import getLogger
 from time import time
 from typing import Any, Dict, Mapping, TYPE_CHECKING
 
-from flask import session
+from flask import current_app, session
 from ipernity import IpernityAPI
 
 if TYPE_CHECKING:
@@ -30,9 +30,10 @@ class CachedIpernityAPI(IpernityAPI):
     
     @property
     def cache(self) -> Dict:
-        if 'ipernity_cache' not in session:
-            session['ipernity_cache'] = {}
-        return session['ipernity_cache']
+        key = current_app.config['IPERNITY_SESSION_PREFIX'] + 'cache'
+        if key not in session:
+            session[key] = {}
+        return session[key]
     
     
     def call(self, method_name: str, **kwargs: Any) -> Mapping:
