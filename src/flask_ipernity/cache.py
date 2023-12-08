@@ -7,11 +7,11 @@ from logging import getLogger
 from time import time
 from typing import Any, Dict, Mapping, TYPE_CHECKING
 
-from flask import current_app, session
 from ipernity import IpernityAPI
 
-if TYPE_CHECKING:
-    from .ext import Ipernity
+from .ext import ipernity
+
+# if TYPE_CHECKING:
 
 
 log = getLogger(__name__)
@@ -26,14 +26,17 @@ class CachedIpernityAPI(IpernityAPI):
         **kwargs: Any
     ):
         super().__init__(*args, **kwargs)
+        self.timeout = timeout
     
     
     @property
     def cache(self) -> Dict:
-        key = current_app.config['IPERNITY_SESSION_PREFIX'] + 'cache'
-        if key not in session:
-            session[key] = {}
-        return session[key]
+        cache = ipernity.session_get('cache', None)
+        if cache is None:
+            log.debug('Initializing cache')
+            ipernity.session_set('cache', {})
+            cache = ipernity.session_get('cache', None)
+        return cache
     
     
     def call(self, method_name: str, **kwargs: Any) -> Mapping:
@@ -46,11 +49,19 @@ class CachedIpernityAPI(IpernityAPI):
                     method_name,
                     kwargs
                 )
+                ipernity.session_set(
+                    'returns_from_cache',
+                    ipernity.session_get('returns_from_cache', 0) + 1
+                )
                 return res
         
         res = super().call(method_name, **kwargs)
+        ipernity.session_set(
+            'api_calls',
+            ipernity.session_get('api_calls', 0) + 1
+        )
         
-        self.cache[key] = (res, time() + 300)
+        self.cache[key] = (res, time() + self.timeout)
         return res
 
 
