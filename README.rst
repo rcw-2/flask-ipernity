@@ -11,6 +11,10 @@ with `Flask-Login`_ provide user login via Ipernity.
 Installation
 -------------
 
+.. code-block:: console
+    
+    pip install Flask-Ipernity
+
 The source code is available at `<http://github.com/rcw-2/flask-ipernity>`_.
 
 
