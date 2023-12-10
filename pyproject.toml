@@ -24,7 +24,8 @@ requires-python = ">=3.8"
 dynamic = ["version"]
 
 [project.urls]
-homepage = "https://github.com/rcw-2/flask-ipernity"
+Homepage = "https://github.com/rcw-2/flask-ipernity"
+Documentation = "https://flask-ipernity.readthedocs.io/"
 
 [project.optional-dependencies]
 login = ["Flask-Login"]

@@ -17,6 +17,19 @@ callback = Blueprint('ip_callback', __name__)
 
 @callback.route('/cb')
 def ipernity_callback() -> Response:
+    """
+    Callback for Ipernity.
+    
+    The URL to this view should be stored as the callback URL for the Ipernity
+    application. With Web authentication, the user es redirected here with a
+    ``frob`` parameter. ``ipernity_callback`` then calls :ip:`auth.getToken`
+    and stores the token in :attr:`~Ipernity.api` and Flask's
+    :data:`~flask.session` object.
+    
+    Returns:
+        Redirect to the URL passed to
+        :meth:`~flask_ipernity.ext.Ipernity.authorize`.
+    """
     log.debug('Ipernity callback called')
     ipernity.set_token()
     if current_app.config['IPERNITY_LOGIN']:

@@ -8,19 +8,19 @@ from functools import wraps
 from logging import getLogger
 from typing import Any, Callable, Dict, Mapping, TYPE_CHECKING
 
-from flask import Flask, redirect, current_app, g, request, session
+from flask import Flask, Response, redirect, current_app, g, request, session
 from ipernity import IpernityAPI
 from werkzeug.local import LocalProxy
 
-if TYPE_CHECKING:
-    from flask import Response
-    from flask_login import LoginManager
+# if TYPE_CHECKING:
 
 
 log = getLogger(__name__)
 
 
 default_flask_options = {
+    'IPERNITY_API_KEY': None,
+    'IPERNITY_API_SECRET': None,
     'IPERNITY_CACHE_REQUESTS': False,
     'IPERNITY_CACHE_MAX_AGE': 300,
     'IPERNITY_CALLBACK': True,
@@ -34,6 +34,7 @@ default_flask_options = {
 
 class Ipernity():
     """
+    Class for the Flask Extension.
     
     Args:
         app:            The Flask application
@@ -49,6 +50,15 @@ class Ipernity():
     
     
     def init_app(self, app: Flask):
+        """
+        Initializes ``app`` for Flask-Ipernity.
+        
+        This is called from the constructor if you pass an app to it.
+        See :flask+doc:`extensiondev` for more information.
+        
+        Args:
+            app:    `Flask`_ application
+        """
         log.debug('Initializing Ipernity with app %s', app.name)
         app.extensions['ipernity'] = self
         
@@ -79,9 +89,26 @@ class Ipernity():
     
     def authorize(
         self,
-        permissions: Mapping|None = None,
+        permissions: Mapping[str, str]|None = None,
         next_url: str|None = None
     ) -> Response:
+        """
+        Returns a redirect to the authorization URL.
+        
+        Creates an authorization URL on `www.ipernity.com` for the requested
+        permissions with :attr:`~ipernity.auth.WebAuthHandler.auth_url` and
+        redirects there. Ipernity then checks if these permissions have already
+        been authorized and asks the user if not. After authorization, the user
+        is redirected back to the application's callback.
+        
+        Args:
+            permissions:    Contains the permissions to request. If ``None``,
+                            the configuration value :data:`IPERNITY_PERMISSIONS`
+                            is used. See there for data format.
+            next_url:       URL to redirect to after returning from Ipernity.
+        Returns:
+            Redirect to the Ipernity authorization URL.
+        """
         if permissions is None:
             permissions = current_app.config['IPERNITY_PERMISSIONS']
         log.debug('Authorizing for %s', permissions)
@@ -92,6 +119,13 @@ class Ipernity():
     
     
     def set_token(self, frob: str|None = None):
+        """
+        Sets the API token from ``frob``.
+        
+        Args:
+            frob:   See 
+                `Ipernity Authentication <http://www.ipernity.com/help/api/auth.web.html>`_
+        """
         log.debug('Setting token')
         if frob is None:
             log.debug('Getting frob from request')
@@ -103,6 +137,12 @@ class Ipernity():
     
     
     def logout(self):
+        """
+        Logs out of Ipernity.
+        
+        Deletes all session variables starting with :data:`IPERNITY_SESSION_PREFIX`
+        and removes the API token.
+        """
         for key in list(session):
             if key.startswith(current_app.config['IPERNITY_SESSION_PREFIX']):
                 del session[key]
@@ -111,7 +151,13 @@ class Ipernity():
     
     @property
     def api(self) -> IpernityAPI:
-        """The current Ipernity API"""
+        """
+        The current Ipernity API.
+        
+        Depending on :data:`IPERNITY_CACHE_REQUESTS`, the type is
+        :class:`~ipernity.IpernityAPI` or
+        :class:`~flask_ipernity.cache.CachedIpernityAPI`.
+        """
         if 'ipernity_api' not in g:
             log.debug('Creating IpernityAPI object')
             kwargs = {
@@ -136,18 +182,42 @@ class Ipernity():
     def session_get(self, key: str, default: Any = None) -> Any:
         """
         Returns a session variable.
+        
+        :data:`IPERNITY_SESSION_PREFIX` is automatically prepended to ``key``.
+        
+        Args:
+            key:        Name of the session variable.
+            default:    Default value if variable is not present.
+        Returns:
+            The session variable.
         """
         return session.get(current_app.config['IPERNITY_SESSION_PREFIX'] + key, default)
     
     
     def session_set(self, key: str, value: Any):
-        """Sets a session variable."""
+        """
+        Sets a session variable.
+        
+        :data:`IPERNITY_SESSION_PREFIX` is automatically prepended to ``key``.
+        
+        Args:
+            key:    Name of the session variable.
+            value:  New value for variable.
+        """
         session[current_app.config['IPERNITY_SESSION_PREFIX'] + key] = value
     
     
     def session_pop(self, key: str, default: Any = None) -> Any:
         """
         Removes a session variable and returns it.
+        
+        :data:`IPERNITY_SESSION_PREFIX` is automatically prepended to ``key``.
+        
+        Args:
+            key:        Name of the session variable.
+            default:    Default value if variable is not present.
+        Returns:
+            The session variable.
         """
         return session.pop(current_app.config['IPERNITY_SESSION_PREFIX'] + key, default)
 
@@ -162,15 +232,25 @@ def _get_ipernity() -> Ipernity:
     return current_app.extensions['ipernity']
 
 
+# Proxy for the current :class:`Ipernity` instance.
 ipernity: Ipernity = LocalProxy(_get_ipernity)
 
 
 def ipernity_auth_required(permissions: Mapping[str,str]|None = None) -> Callable:
     """
     Decorator for a view that requires Ipernity authentication.
+    
+    Args:
+        permissions:    Contains the permissions required for the view. If
+                        ``None``, the configuration value
+                        :data:`IPERNITY_PERMISSIONS` is used. See
+                        there for data format.
+    Returns:
+        The modified function.
     """
     def decorate(f: Callable) -> Callable:
         nonlocal permissions
+        
         @wraps(f)
         def view(*args, **kwargs):
             nonlocal permissions

@@ -20,12 +20,12 @@ log = getLogger(__name__)
 class CachedIpernityAPI(IpernityAPI):
     """
     Wrapper for :class:`~ipernity.IpernityAPI` that caches requests
-    in the Flask Session.
+    in the Flask :data:`~flask.session`.
     
     Args:
         timeout:    Time in seconds that cached results are considered valid.
-        args:       Passed to :class:`~ipernity.IpernityAPI`.
-        kwargs:     Passed to :class:`~ipernity.IpernityAPI`.
+        args:       Passed to :class:`~ipernity.api.IpernityAPI`.
+        kwargs:     Passed to :class:`~ipernity.api.IpernityAPI`.
     """
     
     def __init__(
@@ -40,7 +40,13 @@ class CachedIpernityAPI(IpernityAPI):
     
     @property
     def cache(self) -> Dict:
-        """Dict for storing the cache"""
+        """
+        Dict for storing the cache.
+        
+        This gives you direct access to the :class:`~flask.session` variable
+        containing the cached data. When modifying the dict, make sure to set
+        :attr:`~flask.session.modified` so that the changes will be saved.
+        """
         cache = ipernity.session_get('cache', None)
         if cache is None:
             log.debug('Initializing cache')
@@ -49,7 +55,12 @@ class CachedIpernityAPI(IpernityAPI):
         return cache
     
     
-    def call(self, method_name: str, **kwargs: Any) -> Mapping:
+    def call(self, method_name: str, **kwargs: Any) -> Dict:
+        """
+        Makes an API call and caches the result.
+        
+        The results are stored in the :attr:`cache` property.
+        """
         key = method_name + repr(self.token) + repr(kwargs)
         if key in self.cache:
             res, expire = self.cache[key]
