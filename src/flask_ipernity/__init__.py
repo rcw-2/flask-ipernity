@@ -1,4 +1,5 @@
 """
+Includes the members providing core functinality from .ext.
 """
 
 from .ext import Ipernity, ipernity_auth_required, ipernity

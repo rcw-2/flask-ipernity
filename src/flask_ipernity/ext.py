@@ -1,5 +1,5 @@
 """
-This module contains the extension's core functionality. 
+This module defines the Flask extension. 
 """
 
 from __future__ import annotations
@@ -54,7 +54,12 @@ class Ipernity():
         Initializes ``app`` for Flask-Ipernity.
         
         This is called from the constructor if you pass an app to it.
-        See :flask+doc:`extensiondev` for more information.
+        See :external+flask:doc:`extensiondev` for more information.
+        
+        .. note::
+            If you are using the
+            :ref:`Flask-Login integration <flask-login-integration>`, make
+            sure 
         
         Args:
             app:    `Flask`_ application
@@ -155,7 +160,7 @@ class Ipernity():
         The current Ipernity API.
         
         Depending on :data:`IPERNITY_CACHE_REQUESTS`, the type is
-        :class:`~ipernity.IpernityAPI` or
+        :class:`~ipernity.api.IpernityAPI` or
         :class:`~flask_ipernity.cache.CachedIpernityAPI`.
         """
         if 'ipernity_api' not in g:
@@ -245,8 +250,6 @@ def ipernity_auth_required(permissions: Mapping[str,str]|None = None) -> Callabl
                         ``None``, the configuration value
                         :data:`IPERNITY_PERMISSIONS` is used. See
                         there for data format.
-    Returns:
-        The modified function.
     """
     def decorate(f: Callable) -> Callable:
         nonlocal permissions

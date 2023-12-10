@@ -5,3 +5,4 @@ Flask-Login Integration
     :members:
 
 
+.. include:: links.inc

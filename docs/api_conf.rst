@@ -1,6 +1,8 @@
 Configuration Options
 ======================
 
+The following options of the Flask configuration can be used to control
+Flask-Ipernity's behavior:
 
 
 .. data:: IPERNITY_APP_KEY

@@ -36,13 +36,14 @@ in two steps:
 2.  After authorization, the Browser is redirected to the application's
     callback URL (see above). By default, Flask-Ipernity adds a
     :class:`~flask.Blueprint` with a callback view that gets an access token
-    and stores it in the application's :attr:`~flask.session`.
-    If you set :data:`IPERNITY_CALLBACK`=``False``, you can define your own
+    and stores it in the application's :class:`~flask.session`.
+    If you set :data:`IPERNITY_CALLBACK` = ``False``, you can define your own
     callback.
 
-Flask-Ipernity provides a :class:`LocalProxy` variable :data:`ipernity` that
-contains the :class:`Ipernity` object. API methods can be accessed with the
-:attr:`~Ipernity.api` property.
+Flask-Ipernity provides a :class:`LocalProxy` variable
+:data:`~flask_ipernity.ipernity` that contains the current application's
+:class:`~flask_ipernity.Ipernity` object. API methods can be accessed with
+the :attr:`~flask_ipernity.Ipernity.api` property.
 
 Example:
 
@@ -67,10 +68,12 @@ Example:
 
 
 .. seealso::
-    * :class:`~flask_ipernity.ext.Ipernity` class
-    * :data:`~flask_ipernity.ext.ipernity` variable
-    * :func:`~flask_ipernity.ext.ipernity_auth_required` decorator
+    * :class:`~flask_ipernity.Ipernity` class
+    * :data:`~flask_ipernity.ipernity` variable
+    * :func:`~flask_ipernity.ipernity_auth_required` decorator
 
+
+.. _flask-login-integration:
 
 Using Flask-Ipernity with Flask-Login
 --------------------------------------
@@ -82,11 +85,12 @@ behavior, set the :data:`IPERNITY_LOGIN` configuration to ``True``.
 
 .. note::
     When using ``IPERNITY_LOGIN=True``, be sure to call
-    :meth:`LoginManager.init_app` before :meth:`Ipernity.init_app`!
+    :meth:`flask_login.LoginManager.init_app` before
+    :meth:`flask_ipernity.Ipernity.init_app`!
 
 Views marked with :func:`~flask_login.login_required` will then trigger
 Ipernity authentication. Additionally using
-:func:`~flask_ipernity.ext.ipernity_auth_required` is not necessary and may
+:func:`~flask_ipernity.ipernity_auth_required` is not necessary and may
 lead to strange behavior.
 
 .. code-block:: python

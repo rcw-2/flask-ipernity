@@ -1,4 +1,5 @@
 """
+This module provides cache functionality.
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ log = getLogger(__name__)
 class CachedIpernityAPI(IpernityAPI):
     """
     Wrapper for :class:`~ipernity.IpernityAPI` that caches requests
-    in the Flask :data:`~flask.session`.
+    in the Flask :class:`~flask.session`.
     
     Args:
         timeout:    Time in seconds that cached results are considered valid.

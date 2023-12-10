@@ -1,6 +1,8 @@
 Core functionality
 ===================
 
+.. automodule:: flask_ipernity.ext
+
 .. module:: flask_ipernity
 
 .. autoclass:: Ipernity

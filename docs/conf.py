@@ -220,8 +220,8 @@ autodoc_typehints_format = 'short'
 
 intersphinx_mapping = {
     'flask':    ('https://flask.palletsprojects.com/en/3.0.x/', None),
-#    'fl-ses':   ('https://flask-session.readthedocs.io/en/latest/', None),
-#    'fl-log':   ('https://flask-login.readthedocs.io/en/latest/', None),
+    'fl-ses':   ('https://flask-session.readthedocs.io/en/latest/', None),
+    'fl-log':   ('https://flask-login.readthedocs.io/en/latest/', None),
     'ip':       ('https://pyipernity.readthedocs.io/en/stable/', None),
 }
 

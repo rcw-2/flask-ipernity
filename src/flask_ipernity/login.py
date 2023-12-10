@@ -1,5 +1,5 @@
 """
-Authentication Flask Extensions
+This module provides integration with `Flask-Login`_ 
 """
 
 from __future__ import annotations
@@ -40,6 +40,7 @@ def init_app(app: Flask):
 
 @ip_login.route('/login')
 def login() -> Response:
+    """Login View"""
     log.debug('Login called')
     return ipernity.authorize(
         current_app.config['IPERNITY_PERMISSIONS'],
@@ -49,7 +50,11 @@ def login() -> Response:
 
 @ip_login.route('/logout')
 def logout() -> Response:
-    """Logout"""
+    """
+    Logout View.
+    
+    This calls :func:`~flask_login.logout_user` and redirects
+    """
     log.debug('Logout called')
     logout_user()
     return redirect('/')
@@ -88,7 +93,10 @@ def on_logout(sender: Flask, user: User):
 
 class User(UserMixin):
     """
-    A user
+    `Flask-Login`_ User class
+    
+    Args:
+        api:    Ipernity API Instance
     """
         
     def __init__(
@@ -102,6 +110,14 @@ class User(UserMixin):
         return '<User({})>'.format(self.get_id())
     
     def get_id(self) -> str:
+        """
+        Returns the user's Ipernity user ID.
+        
+        
+        
+        Returns:
+            Ipernity user ID.
+        """
         return self._api.user_info['user_id']
     
     @property
