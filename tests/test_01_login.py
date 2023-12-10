@@ -1,10 +1,58 @@
 
-from logging import getLogger
 
+from __future__ import annotations
+
+from logging import getLogger
+from typing import Any, TYPE_CHECKING
+
+from flask_ipernity import Ipernity
 import pytest
+
+if TYPE_CHECKING:
+    from flask import Flask
+    from flask.testing import FlaskClient
 
 
 log = getLogger(__name__)
+
+
+@pytest.fixture
+def app(base_app: Flask) -> Flask:
+    from flask import jsonify, url_for, redirect
+    from flask_login import LoginManager, login_required, current_user
+    
+    a = base_app
+    a.config['IPERNITY_LOGIN'] = True
+    LoginManager(a)
+    Ipernity(a)
+    
+    @a.route('/user')
+    def user():
+        log.debug('Returning user info')
+        return jsonify({
+            'id':               current_user.get_id(),
+            'is_active':        current_user.is_active,
+            'is_anonymous':     current_user.is_anonymous,
+            'is_authenticated': current_user.is_authenticated,
+        })
+    
+    @a.route('/redir')
+    def redir():
+        return redirect(url_for(
+            'ip_login.login'
+        ))
+    
+    @a.route('/restricted')
+    @login_required
+    def restricted():
+        return 'restricted'
+    
+    return a
+
+
+@pytest.fixture
+def client(app: Flask) -> FlaskClient:
+    return app.test_client()
 
 
 def test_login_logout(browser, client, test_config):
@@ -42,20 +90,6 @@ def test_not_logged_in(client):
 
 
 def test_login_required(app, client):
-    from flask import url_for, redirect
-    from flask_login import login_required
-    
-    @app.route('/redir')
-    def redir():
-        return redirect(url_for(
-            'ip_login.login'
-        ))
-    
-    @app.route('/restricted')
-    @login_required
-    def restricted():
-        return 'restricted'
-    
     log.info('Getting login URL')
     res1 = client.get('/redir')
     log.info('Checking redirect of restricted view')

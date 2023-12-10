@@ -22,7 +22,7 @@ def ipernity_callback() -> Response:
     if current_app.config['IPERNITY_LOGIN']:
         from .login import do_login
         do_login()
-    next_url = ipernity.session_pop('ipernity_next_url', '/')
+    next_url = ipernity.session_pop('next_url', '/')
     return redirect(next_url)
 
 

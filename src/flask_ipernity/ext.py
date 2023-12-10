@@ -1,10 +1,12 @@
 """
+This module contains the extension's core functionality. 
 """
 
 from __future__ import annotations
 
+from functools import wraps
 from logging import getLogger
-from typing import Callable, Dict, Mapping, TYPE_CHECKING
+from typing import Any, Callable, Dict, Mapping, TYPE_CHECKING
 
 from flask import Flask, redirect, current_app, g, request, session
 from ipernity import IpernityAPI
@@ -19,13 +21,13 @@ log = getLogger(__name__)
 
 
 default_flask_options = {
+    'IPERNITY_CACHE_REQUESTS': False,
     'IPERNITY_CACHE_MAX_AGE': 300,
-    'IPERNITY_CALLBACK': False,
+    'IPERNITY_CALLBACK': True,
     'IPERNITY_CALLBACK_URL_PREFIX': '/ipernity',
     'IPERNITY_LOGIN': False,
     'IPERNITY_LOGIN_URL_PREFIX': '/ipernity',
     'IPERNITY_PERMISSIONS': {},
-    'IPERNITY_CACHE_REQUESTS': False,
     'IPERNITY_SESSION_PREFIX': 'ipernity_',
 }
 
@@ -35,8 +37,6 @@ class Ipernity():
     
     Args:
         app:            The Flask application
-        add_callback:   Add Ipernity callback
-        login:          If given, use Ipernity as backend for Flask-Login
     """
     
     def __init__(
@@ -87,7 +87,7 @@ class Ipernity():
         log.debug('Authorizing for %s', permissions)
         if next_url is None:
             next_url = request.url
-        session['ipernity_next_url'] = next_url
+        self.session_set('next_url', next_url)
         return redirect(self.api.auth.auth_url(permissions))
     
     
@@ -159,11 +159,32 @@ def _context_processor() -> Dict:
 
 
 def _get_ipernity() -> Ipernity:
-    if 'ipernity_object' not in g:
-        g.ipernity_object = current_app.extensions['ipernity']
-    return g.ipernity_object
+    return current_app.extensions['ipernity']
 
 
 ipernity: Ipernity = LocalProxy(_get_ipernity)
+
+
+def ipernity_auth_required(permissions: Mapping[str,str]|None = None) -> Callable:
+    """
+    Decorator for a view that requires Ipernity authentication.
+    """
+    def decorate(f: Callable) -> Callable:
+        nonlocal permissions
+        @wraps(f)
+        def view(*args, **kwargs):
+            nonlocal permissions
+            if permissions is None:
+                permissions = current_app.config['IPERNITY_PERMISSIONS']
+            if (
+                ipernity.api.token is None or
+                not ipernity.api.has_permissions(permissions)
+            ):
+                return ipernity.authorize(permissions)
+            return f(*args, **kwargs)
+        
+        return view
+    
+    return decorate
 
 

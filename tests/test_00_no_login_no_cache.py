@@ -6,15 +6,13 @@ Be careful when renaming files.
 import sys
 from logging import getLogger
 
+from flask_ipernity import Ipernity, ipernity
 
 log = getLogger(__name__)
 
 
 def test_no_login_no_cache(base_app, browser, test_config):
-    from flask_ipernity import Ipernity, ipernity
-    
     app = base_app
-    app.config['IPERNITY_CALLBACK'] = True
     Ipernity(app)
     
     @app.route('/login')

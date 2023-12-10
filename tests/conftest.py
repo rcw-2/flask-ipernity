@@ -38,44 +38,22 @@ def base_app(test_config: Mapping) -> Flask:
         log.debug('Returning Ipernity token')
         return jsonify(ipernity.session_get('token'))
     
-    return a
-
-
-@pytest.fixture
-def app(base_app: Flask) -> Flask:
-    from flask_login import LoginManager, current_user
-    a = base_app
-    a.config['IPERNITY_CALLBACK'] = True
-    a.config['IPERNITY_LOGIN'] = True
-    LoginManager(a)
-    Ipernity(a)
-    
-    @a.route('/user')
-    def user():
-        log.debug('Returning user info')
-        return jsonify({
-            'id':               current_user.get_id(),
-            'is_active':        current_user.is_active,
-            'is_anonymous':     current_user.is_anonymous,
-            'is_authenticated': current_user.is_authenticated,
-        })
+    @a.route('/get_perm')
+    def get_perm():
+        log.debug('Returning Ipernity permissions')
+        return jsonify(ipernity.api.permissions)
     
     return a
-
-
-@pytest.fixture
-def client(app: Flask) -> FlaskClient:
-    return app.test_client()
 
 
 @pytest.fixture
 def browser(test_config: Mapping) -> IpernitySession:
-    session = IpernitySession()
+    br = IpernitySession()
     for domain, paths in test_config['ipernity']['cookies'].items():
         for path, cookies in paths.items():
             for name, value in cookies.items():
-                session.cookies.set(name, value, domain=domain, path=path)
-    return session
+                br.cookies.set(name, value, domain=domain, path=path)
+    return br
 
 
 class IpernitySession(requests.Session):
@@ -90,11 +68,6 @@ class IpernitySession(requests.Session):
             html = IpernityParser()
             html.feed(res.text)
             url = urlparse(auth_url)
-            params = parse_qs(url.query)
-            #html.params.update({
-            #    # 'app[api_key]': params['api_key'],
-            #    'app[api_sig]': params['api_sig'],
-            #})
             log.info('Posting authorization %s', html.params)
             res = self.request(
                 html.method,
