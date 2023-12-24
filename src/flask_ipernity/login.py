@@ -40,7 +40,14 @@ def init_app(app: Flask):
 
 @ip_login.route('/login')
 def login() -> Response:
-    """Login View"""
+    """
+    Login View.
+    
+    This calls :meth:`~flask_ipernity.Ipernity.authorize` and returns the result.
+    
+    Returns:
+        Redirect to Ipernity authorization URL.
+    """
     log.debug('Login called')
     return ipernity.authorize(
         current_app.config['IPERNITY_PERMISSIONS'],
@@ -53,7 +60,12 @@ def logout() -> Response:
     """
     Logout View.
     
-    This calls :func:`~flask_login.logout_user` and redirects
+    This calls :func:`~flask_login.logout_user` and redirects to the homepage.
+    
+    .. todo:: Redirect to ``next``.
+    
+    Returns:
+        Redirect to Homepage.
     """
     log.debug('Logout called')
     logout_user()
@@ -67,6 +79,9 @@ def do_login():
 def load_user(id_: str) -> User:
     """
     Loads a user from the session.
+    
+    Returns an Ipernity user if the ipernity token belongs to user ``id_``.
+    Otherwise, returns None.
     """
     log.debug('Loading user %s', id_)
     if not ipernity.api.token:
