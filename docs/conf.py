@@ -37,7 +37,7 @@ author = ', '.join(authors)
 from ipernity._version import version as release
 version = '.'.join(release.split('.')[:3])
 
-copyright   = '2023 ' + author
+copyright   = '2023-24 ' + author
 
 # -- General configuration ---------------------------------------------------
 

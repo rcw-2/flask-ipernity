@@ -21,7 +21,7 @@ To use Flask-Ipernity, you need to create an
     URL is `http[s]://your.server.name/ipernity/cb`. Don't worry,
     you can change this value later if needed.
 *   Save the application key and secret to the Flask configuration in the
-    `IPERNITY_APP_KEY` and `IPERNITY_APP_SECRET` keys.
+    :data:`IPERNITY_APP_KEY` and :data:`IPERNITY_APP_SECRET` keys.
 
 
 Ipernity Authentication/Authorization
@@ -71,6 +71,21 @@ Example:
     * :class:`~flask_ipernity.Ipernity` class
     * :data:`~flask_ipernity.ipernity` variable
     * :func:`~flask_ipernity.ipernity_auth_required` decorator
+
+
+Proxying Ipernity documents
+-----------------------------
+
+Flask-Ipernity can proxy requests to Ipernity documents if
+:data:`IPERNITY_PROXY_DOCS` is ``True`` (which is the default). This enables
+a blueprint that can be accessed with with something like
+
+.. code-block:: html
+
+    <img src="{{url_for('ip_proxy.doc', doc_id=4711, label='1600')}}">
+
+``label`` is the one of the sizes Ipernity provides, or ``'original'`` for the
+original file.
 
 
 .. _flask-login-integration:

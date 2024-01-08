@@ -28,6 +28,8 @@ default_flask_options = {
     'IPERNITY_LOGIN': False,
     'IPERNITY_LOGIN_URL_PREFIX': '/ipernity',
     'IPERNITY_PERMISSIONS': {},
+    'IPERNITY_PROXY_DOCS': True,
+    'IPERNITY_PROXY_URL_PREFIX': '/ipernity',
     'IPERNITY_SESSION_PREFIX': 'ipernity_',
 }
 
@@ -77,6 +79,14 @@ class Ipernity():
             app.register_blueprint(
                 callback,
                 url_prefix = app.config['IPERNITY_CALLBACK_URL_PREFIX']
+            )
+        
+        if app.config['IPERNITY_PROXY_DOCS']:
+            log.debug('Preparing document proxy blueprint')
+            from .proxy import proxy
+            app.register_blueprint(
+                proxy,
+                url_prefix = app.config['IPERNITY_PROXY_URL_PREFIX']
             )
         
         if app.config['IPERNITY_LOGIN']:
@@ -259,10 +269,7 @@ def ipernity_auth_required(permissions: Mapping[str,str]|None = None) -> Callabl
             nonlocal permissions
             if permissions is None:
                 permissions = current_app.config['IPERNITY_PERMISSIONS']
-            if (
-                ipernity.api.token is None or
-                not ipernity.api.has_permissions(permissions)
-            ):
+            if not ipernity.api.has_permissions(permissions):
                 return ipernity.authorize(permissions)
             return f(*args, **kwargs)
         
